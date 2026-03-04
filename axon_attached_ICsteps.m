@@ -1,9 +1,7 @@
-%%% Extract Signal from Axon Attached IC Steps Recordings with EAPs
+%%% Extract Signal from Axon Attached IC Steps Recordings (with or without EAPs)
 
 % Author: Sophie Liebergall
-% Updated: 7/16/24
-% Purpose: Extract signal from loose seal recordings of axonal APs during
-% current step
+% Purpose: Extract signal from axon-attached recordings of axonal APs during current step protocol
 
 %% Load in .abf file
 
@@ -292,4 +290,5 @@ AP_data.num_soma_EAPs = cellfun(@numel, AP_data.ectopic_soma_AP_locs);
 AP_data.num_axon_evoked_APs = cellfun(@(x) sum(x == 1), AP_data.evoked_axon_AP_fidelity);
 AP_data.num_axon_evoked_APs2 = cellfun(@numel, AP_data.evoked_axon_AP_locs2);
 AP_data.num_axon_EAPs2 = cellfun(@numel, AP_data.ectopic_axon_AP_locs2);
+
 
