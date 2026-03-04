@@ -1,10 +1,8 @@
-%%% Model Rundown in Axonal Action Potential Fidelity
+%%% Model Use-Dependent Changes in Axonal Action Potential Fidelity
 
 % Author: Sophie Liebergall
-% Updated: 12/5/24
-% Purpose: Analyze "rundown" of conduction during normal IC steps protocols
-
-% Inputs: AP_data table (output from axon_attached_IC_steps_EAPs)
+% Updated: 12/5/25
+% Purpose: Analyze changes in axonal AP during variou somatic stimulation protocols
 
 clearvars %-except AP_data
 
@@ -184,49 +182,6 @@ var_pulses_T = [var_pulses_T; T];
 
 end
 
-% %% Model for Activity-dependent Decreases in Axonal Fidelity (IC steps)
-% 
-% % Load your data
-% % Assume you have:
-% % time_AP: Nx1 vector of AP times (in ms)
-% % amp_axon: Nx1 vector of recorded axonal AP amplitudes
-% % amp_soma: Nx1 vector of corresponding soma AP amplitudes
-% % N_APs: Nx1 vector of cumulative AP count at each time point
-% 
-% ID_i = "8305_1"; % Select recording for modeling data
-% 
-% time_AP = ICsteps_T.soma_AP_locs(ICsteps_T.ID == ID_i); % time of APs in seconds
-% amp_axon = ICsteps_T.axon_AP_peaks_norm(ICsteps_T.ID == ID_i); % vector of normalized axon AP peaks
-% 
-% % Define the model function
-% decay_model = @(params, t, t_APs) params(1) * sum(exp(-(t - t_APs) / params(2)));
-% 
-% % Define the objective function for fitting
-% objective_fun = @(params) amp_axon - arrayfun(@(t) ...
-%     sum(decay_model(params, t, time_AP(time_AP < t))), time_AP, 'UniformOutput', true);
-% 
-% params0 = [max(amp_axon), 10]; % Initial guesses: A0 = max amplitude, tau = 10ms
-% lb = [0, 0]; % Lower bounds (A0 and tau must be positive)
-% ub = [Inf, Inf]; % Upper bounds
-% 
-% params_fit = lsqnonlin(objective_fun, params0, lb, ub);
-% 
-% % Extract fitted parameters
-% A0_fit = params_fit(1);
-% tau_fit = params_fit(2);
-% 
-% amp_axon_pred = arrayfun(@(t) ...
-%     sum(decay_model(params_fit, t, time_AP(time_AP < t))), time_AP, 'UniformOutput', true);
-% 
-% figure;
-% scatter(time_AP, amp_axon, 'bo'); hold on; % Original data
-% plot(time_AP, amp_axon_pred, 'r-', 'LineWidth', 2); % Fitted model
-% xlabel('Time (ms)');
-% ylabel('AP Amplitude');
-% legend('Data', 'Fitted Model');
-% title('Axonal AP Amplitude Decay Model');
-% hold off;
-
 %% Decay Model for Activity-dependent Decreases in Axonal Fidelity (IC Steps)
 
 num_cells = height(unique(ICsteps_T.ID));
@@ -294,74 +249,6 @@ close all;
     R2_all(i) = 1 - (SS_res / SS_tot);
 
 end
-
-% %% Decay Model 2 for Activity-dependent Decreases in Axonal Fidelity (IC Steps)
-% 
-% num_cells = height(unique(ICsteps_T.ID));
-% 
-% params_fit_all2 = zeros(num_cells, 2); % Store fitted parameters for each cell
-% R2_all2 = zeros(num_cells, 1); % Store R² values
-% 
-% IDs = unique(ICsteps_T.ID); % array of file IDs
-% 
-% for i = 1:num_cells
-% 
-% ID_i = IDs(i); % Get recording ID of interest
-% 
-% time_AP = ICsteps_T.soma_AP_locs(ICsteps_T.ID == ID_i); % time of APs in seconds
-% amp_axon = ICsteps_T.axon_AP_peaks_norm(ICsteps_T.ID == ID_i); % vector of normalized axon AP peaks
-% amp0 = amp_axon(1); % first AP amplitude
-% 
-% % Define the corrected multiplicative decay model
-% decay_model = @(params, t, t_APs, amp0) ...
-%     amp0 * (isempty(t_APs) + ~isempty(t_APs) * prod(exp(-(t - t_APs) / params(2))));
-% 
-% % Initial guess for parameters [A0, tau]
-% params0 = [max(amp_axon), 10];  % You may adjust based on your data
-% 
-% % Define the objective function for fitting
-% objective_fun = @(params) amp_axon - arrayfun(@(t) ...
-%     decay_model(params, t, time_AP(time_AP < t), amp0), time_AP, 'UniformOutput', true);
-% 
-% % Fit using nonlinear least squares
-% params_fit = lsqnonlin(objective_fun, params0, [0, 0], [1, Inf]);
-% params_fit_all2(i, :) = params_fit;
-% 
-% % Extract the fitted parameters
-% A0_fit = params_fit(1);
-% tau_fit = params_fit(2);
-% 
-% % Predict the amplitudes using the fitted model
-% amp_axon_pred = arrayfun(@(t) decay_model(params_fit, t, time_AP(time_AP < t), amp0), time_AP);
-% 
-% % Plot results
-% figure;
-% scatter(time_AP, amp_axon, 50, 'MarkerFaceColor', pv_color,...
-%     'MarkerEdgeColor', pv_color,'LineWidth',0.25,...
-%     'MarkerFaceAlpha',0.25); hold on; % Original data
-% plot(time_AP, amp_axon_pred, 'k-', 'LineWidth', 2); % Fitted model
-% xlabel('Time (ms)');
-% ylabel('Normalized axon AP amplitude');
-% legend('Data', 'Fitted Model');
-% %title('Axonal AP Amplitude Decay Model');
-% hold off;
-% 
-% % Set the figure size
-% set(gcf, 'Position', [100, 100, 800, 600]);
-% 
-% tit = "decay_model2_fit_" + ID_i;
-% 
-% saveas(gcf, fullfile(saveDir,(tit)), 'pdf')
-% saveas(gcf, fullfile(saveDir,(tit)), 'png')
-% 
-% close all;
-% 
-% % Compute R²
-%     SS_res = sum((amp_axon - amp_axon_pred).^2);
-%     SS_tot = sum((amp_axon - mean(amp_axon)).^2);
-%     R2_all(i) = 1 - (SS_res / SS_tot);
-% 
-% end
 
 %% Get general fitting parameters for IC steps and plot
 
@@ -554,76 +441,6 @@ close all;
     var_pulses_R2_all(i) = 1 - (SS_res / SS_tot);
 
 end
-
-% %% Model for Activity-dependent Decreases in Axonal Fidelity (Raw Signal)
-% 
-% num_cells = height(unique(ICsteps_T.ID));
-% 
-% params_fit_all2 = zeros(num_cells, 3); % Store fitted parameters for each cell
-% R2_all2 = zeros(num_cells, 1); % Store R² values
-% 
-% IDs = unique(ICsteps_T.ID); % array of file IDs
-% 
-% for i = 1:num_cells
-% 
-% ID_i = IDs(i); % Get recording ID of interest
-% 
-% time_AP = ICsteps_T.soma_AP_locs(ICsteps_T.ID == ID_i); % time of APs in seconds
-% amp_axon = ICsteps_T.axon_AP_peaks(ICsteps_T.ID == ID_i); % vector of normalized axon AP peaks
-% 
-% % Define the corrected decay model
-% decay_model = @(params, t, t_APs) params(1) - params(2) * sum(exp(-(t - t_APs) / params(3)));
-% 
-% % Initial guesses for parameters [A0, Delta_A, tau]
-% params0 = [max(amp_axon), max(amp_axon) / 5, 10]; % Adjusted initial guesses
-% 
-% % Define the objective function for fitting
-% objective_fun = @(params) amp_axon - arrayfun(@(t) ...
-%     decay_model(params, t, time_AP(time_AP < t)), time_AP, 'UniformOutput', true);
-% 
-% % Fit using nonlinear least squares
-% params_fit = lsqnonlin(objective_fun, params0, [0, 0, 0], [Inf, Inf, Inf]);
-% params_fit_all(i, :) = params_fit;
-% 
-% % Extract fitted parameters
-% A0_fit = params_fit(1);
-% Delta_A_fit = params_fit(2);
-% tau_fit = params_fit(3);
-% 
-% % Predict axonal amplitude using the fitted model
-% amp_axon_pred = arrayfun(@(t) ...
-%     decay_model(params_fit, t, time_AP(time_AP < t)), time_AP, 'UniformOutput', true);
-% 
-% % Plot results
-% figure;
-% scatter(time_AP, amp_axon, 50, 'MarkerFaceColor', pv_color,...
-%     'MarkerEdgeColor', pv_color,'LineWidth',0.25,...
-%     'MarkerFaceAlpha',0.25); hold on; % Original data
-% plot(time_AP, amp_axon_pred, 'k-', 'LineWidth', 2); % Fitted model
-% xlabel('Time (ms)');
-% ylabel('Normalized axon AP amplitude');
-% legend('Data', 'Fitted Model');
-% %title('Axonal AP Amplitude Decay Model');
-% hold off;
-% 
-% % Set the figure size
-% set(gcf, 'Position', [100, 100, 800, 600]);
-% 
-% tit = "decay_model_fit_raw_" + ID_i;
-% 
-% saveas(gcf, fullfile(saveDir,(tit)), 'pdf')
-% saveas(gcf, fullfile(saveDir,(tit)), 'png')
-% 
-% close all;
-% 
-% % Compute R²
-%     SS_res = sum((amp_axon - amp_axon_pred).^2);
-%     SS_tot = sum((amp_axon - mean(amp_axon)).^2);
-%     R2_all2(i) = 1 - (SS_res / SS_tot);
-% 
-% end
-
-%% Correlate fit parameters with cell properties
 
 %%% Create table with params from fitting (IC steps and pulse protocols)
 
@@ -1133,4 +950,5 @@ scatter(categorical(corr_T.ID), corr_T.param3, 100, categorical(corr_T.ID),...
     'MarkerFaceAlpha',0.5)
 
 xlabel('Cell Identity')
+
 ylabel('Tau Value from Model Fit')
